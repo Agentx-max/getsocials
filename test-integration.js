@@ -100,14 +100,25 @@ async function runTests() {
   });
 
   // URL Validation - Valid URL
-  await test('Validates TikTok URL', async () => {
+  await test('Validates a supported platform URL', async () => {
     const { status, data } = await requestWithRetry('POST', '/api/validate', {
-      url: 'https://www.tiktok.com/@user/video/123456789'
+      url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
     });
     if (status !== 200) throw new Error(`Status ${status}`);
     if (!data.success) throw new Error('Success false');
     if (!data.data.valid) throw new Error('Not valid');
-    if (data.data.platform !== 'TikTok') throw new Error('Wrong platform');
+    if (!data.data.supported) throw new Error('Should be supported');
+    if (data.data.platform !== 'YouTube') throw new Error('Wrong platform');
+  });
+
+  // Removed platforms must report as unsupported rather than pretending
+  await test('Reports removed platforms as unsupported', async () => {
+    const { status, data } = await requestWithRetry('POST', '/api/validate', {
+      url: 'https://www.tiktok.com/@user/video/123456789'
+    });
+    if (status !== 200) throw new Error(`Status ${status}`);
+    if (data.data.supported) throw new Error('TikTok should no longer be supported');
+    if (data.data.platform !== null) throw new Error('Should not detect a platform');
   });
 
   // URL Validation - YouTube
@@ -161,7 +172,7 @@ async function runTests() {
   // 502 is the correct answer when an upstream service cannot be reached.
   await test('Analyse endpoint always returns a well formed response', async () => {
     const { status, data } = await requestWithRetry('POST', '/api/analyze', {
-      url: 'https://www.tiktok.com/@tiktok/video/7241234567890123456'
+      url: 'https://www.instagram.com/p/DLHQfPiyucu/'
     });
     if (![200, 400, 403, 429, 501, 502].includes(status)) {
       throw new Error(`Unexpected status ${status}`);
@@ -171,6 +182,18 @@ async function runTests() {
       if (!data.data) throw new Error('Success without data');
     } else if (!data.error) {
       throw new Error('Failure without an error message');
+    }
+  });
+
+  // An unsupported platform must be rejected with a clear message
+  await test('Rejects an unsupported platform with a clear error', async () => {
+    const { status, data } = await requestWithRetry('POST', '/api/analyze', {
+      url: 'https://www.tiktok.com/@user/video/123456789'
+    });
+    if (status !== 400) throw new Error(`Expected 400, got ${status}`);
+    if (data.success) throw new Error('Should fail');
+    if (!/unsupported/i.test(data.error || '')) {
+      throw new Error(`Unclear error: ${data.error}`);
     }
   });
 
@@ -252,7 +275,7 @@ async function runTests() {
   // URL length guard
   await test('Rejects overly long URL', async () => {
     const { status, data } = await requestWithRetry('POST', '/api/validate', {
-      url: 'https://www.tiktok.com/' + 'a'.repeat(3000)
+      url: 'https://www.youtube.com/' + 'a'.repeat(3000)
     });
     if (status !== 400) throw new Error(`Expected 400, got ${status}`);
     if (data.success) throw new Error('Should fail');
@@ -345,10 +368,13 @@ async function runTests() {
 
   // Root endpoint
   await test('Root endpoint returns API info', async () => {
-    const { status, data } = await requestWithRetry('GET', '/');
+    // The API description lives at /api; "/" serves the site when a
+    // frontend build is present.
+    const { status, data } = await requestWithRetry('GET', '/api');
     if (status !== 200) throw new Error(`Status ${status}`);
     if (!data.success) throw new Error('Success false');
     if (!data.endpoints) throw new Error('No endpoints');
+    if (!data.author) throw new Error('No author');
   });
 
   // Platform status registry
