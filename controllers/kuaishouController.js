@@ -1,7 +1,8 @@
-const { scrapeKuaishou } = require("../services/kuaishouService");
+const { fetchKuaishouData } = require("../services/kuaishouService");
 
 async function handleKuaishouDownload(req, res) {
   const { url } = req.query;
+
   if (!url) {
     return res
       .status(400)
@@ -9,10 +10,10 @@ async function handleKuaishouDownload(req, res) {
   }
 
   try {
-    const data = await scrapeKuaishou(url);
+    const data = await fetchKuaishouData(url);
     res.json({ success: true, data });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(502).json({ success: false, error: err.message });
   }
 }
 

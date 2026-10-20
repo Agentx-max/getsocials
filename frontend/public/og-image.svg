@@ -1,0 +1,110 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0A0A0F"/>
+  <rect x="100" y="100" width="1000" height="430" rx="24" fill="url(#bgGradient)"/>
+  <defs>
+    <linearGradient id="bgGradient" x1="100" y1="100" x2="1100" y2="530" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#11111A"/>
+      <stop offset="100%" stop-color="#1A1A2E"/>
+    </linearGradient>
+    <linearGradient id="textGradient" x1="200" y1="200" x2="1000" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B4CFC"/>
+      <stop offset="50%" stop-color="#A06DFD"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B4CFC"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Decorative elements -->
+  <circle cx="150" cy="150" r="80" fill="url(#accentGradient)" opacity="0.1"/>
+  <circle cx="1050" cy="480" r="120" fill="url(#accentGradient)" opacity="0.08"/>
+
+  <!-- Logo -->
+  <g transform="translate(200, 180)">
+    <rect width="64" height="64" rx="16" fill="url(#accentGradient)"/>
+    <path d="M32 16L44 28H20L32 16Z" fill="white"/>
+    <path d="M32 48L44 36H20L32 48Z" fill="white" opacity="0.6"/>
+  </g>
+
+  <!-- Title -->
+  <text x="280" y="220" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="url(#textGradient)">
+    FluxSave
+  </text>
+
+  <!-- Subtitle -->
+  <text x="280" y="270" font-family="system-ui, sans-serif" font-size="20" fill="#94A3B8">
+    Your media. One simple workflow.
+  </text>
+
+  <!-- Platform icons -->
+  <g transform="translate(200, 320)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#64748B">SUPPORTED PLATFORMS</text>
+    <g transform="translate(0, 30)">
+      <g transform="translate(0, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">TikTok</text>
+      </g>
+      <g transform="translate(140, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">YouTube</text>
+      </g>
+      <g transform="translate(280, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Instagram</text>
+      </g>
+      <g transform="translate(420, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Twitter/X</text>
+      </g>
+      <g transform="translate(560, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Reddit</text>
+      </g>
+      <g transform="translate(700, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">SoundCloud</text>
+      </g>
+    </g>
+    <g transform="translate(0, 90)">
+      <g transform="translate(0, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Pinterest</text>
+      </g>
+      <g transform="translate(140, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Facebook</text>
+      </g>
+      <g transform="translate(280, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Threads</text>
+      </g>
+      <g transform="translate(420, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">LinkedIn</text>
+      </g>
+      <g transform="translate(560, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">Snapchat</text>
+      </g>
+      <g transform="translate(700, 0)">
+        <rect width="120" height="40" rx="8" fill="#1E293B"/>
+        <text x="60" y="26" font-family="system-ui, sans-serif" font-size="14" font-weight="500" fill="#F8FAFC" text-anchor="middle">+10 more</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- CTA -->
+  <g transform="translate(200, 500)">
+    <rect width="280" height="56" rx="16" fill="url(#accentGradient)"/>
+    <text x="140" y="36" font-family="system-ui, sans-serif" font-size="18" font-weight="600" fill="white" text-anchor="middle">Start Downloading</text>
+  </g>
+
+  <!-- Bottom badge -->
+  <g transform="translate(600, 560)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="12" fill="#475569" text-anchor="middle">
+      No account • No watermarks • Privacy focused
+    </text>
+  </g>
+</svg>

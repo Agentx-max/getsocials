@@ -29,7 +29,16 @@ async function twitterDownloader(tweetUrl) {
   });
 
   if (data.status !== "ok") {
-    throw new Error("Failed to fetch Twitter media");
+    throw new Error(data.msg || "Failed to fetch Twitter media");
+  }
+
+  // `data` holds an HTML fragment. When the tweet has no media, or was
+  // removed, the upstream sends a plain message instead — guard the parse so
+  // the caller gets a meaningful error rather than a cheerio crash.
+  if (typeof data.data !== "string" || !data.data.trim()) {
+    throw new Error(
+      data.msg || "No media was found for this post. It may be private or have been removed."
+    );
   }
 
   const $ = cheerio.load(data.data);

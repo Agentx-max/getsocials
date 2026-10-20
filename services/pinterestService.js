@@ -1,56 +1,63 @@
-const axios = require("axios");
-const cheerio = require("cheerio");
+const { runProbe } = require("./pythonBridge");
 
-async function fetchPinterestMedia(url) {
-  const encodedUrl = encodeURIComponent(url);
-  const fullUrl = `https://www.savepin.app/download.php?url=${encodedUrl}&lang=en&type=redirect`;
+/**
+ * Pinterest media service.
+ *
+ * Uses the `pinterest-downloader` library through the Python bridge — the
+ * same engine the PinterestDownloader project ships. It needs no API key and
+ * works with public pins.
+ */
 
+const PINTEREST_HOSTS = ["pinterest.com", "pin.it"];
+
+/**
+ * Checks that the URL points at Pinterest.
+ * @param {string} url
+ */
+function isPinterestUrl(url) {
   try {
-    const response = await axios.get(fullUrl, {
-      headers: {
-        accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "accept-language": "en-US,en;q=0.9",
-        "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Brave";v="138"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
-        Referer: "https://www.savepin.app/",
-      },
-    });
-
-    const $ = cheerio.load(response.data);
-    const title = $("h1").first().text().trim();
-    const thumbnail = $(".image-container img").attr("src");
-    const results = [];
-
-    $("tbody tr").each((_, el) => {
-      const quality = $(el).find(".video-quality").text().trim();
-      const format = $(el).find("td:nth-child(2)").text().trim();
-      const href = $(el).find("a").attr("href");
-      const directUrl = decodeURIComponent(href?.split("url=")[1] || "");
-
-      if (quality && format && directUrl) {
-        results.push({
-          quality,
-          format,
-          url: directUrl,
-        });
-      }
-    });
-
-    return {
-      title,
-      thumbnail,
-      downloads: results,
-    };
-  } catch (error) {
-    throw new Error("Failed to scrape Pinterest media: " + error.message);
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return PINTEREST_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  } catch {
+    return false;
   }
 }
 
-module.exports = { fetchPinterestMedia };
+/**
+ * Fetches media information for a Pinterest pin.
+ *
+ * @param {string} url
+ * @returns {Promise<object>} media payload
+ */
+async function fetchPinterestMedia(url) {
+  if (!url || typeof url !== 'string') {
+    throw new Error('A Pinterest URL must be provided');
+  }
+
+  if (!isPinterestUrl(url)) {
+    throw new Error('That does not look like a Pinterest URL');
+  }
+
+  const data = await runProbe('pinterest', url, { timeout: 45000 });
+
+  const videos = Array.isArray(data.videos) ? data.videos : [];
+  const images = Array.isArray(data.images) ? data.images : [];
+
+  if (!videos.length && !images.length) {
+    throw new Error('No downloadable media was found for this pin.');
+  }
+
+  return {
+    type: videos.length ? 'video' : 'photo',
+    title: data.title || null,
+    thumbnail: data.thumbnail || null,
+    duration: null,
+    author: data.author || null,
+    videos,
+    audios: [],
+    images,
+    downloads: [],
+  };
+}
+
+module.exports = { fetchPinterestMedia, isPinterestUrl };

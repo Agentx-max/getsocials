@@ -1,7 +1,41 @@
-package-lock.json
+# Dependencies
 node_modules/
-test.js
-public/
-swagger.js
+package-lock.json
+frontend/package-lock.json
+
+# Build output
+frontend/dist/
+frontend/.vite/
+build/
+dist/
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+secrets/
+*.session
+cookies.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tooling
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 .vercel
 ignore/
+# Only the root-level public folder is ignored; frontend/public holds the
+# brand icons and the favicon, which must be committed.
+/public/
+swagger.js
+test.js

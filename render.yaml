@@ -1,0 +1,45 @@
+# Render blueprint for GETSocials.
+#
+# Deploy with:  New > Blueprint > point at this repo
+# Or:           render blueprint launch
+#
+# The free web service spins down after 15 minutes of inactivity and wakes
+# up on the next request, so the first request after a quiet period is slow.
+
+services:
+  - type: web
+    name: getsocials
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PYTHON_BIN
+        value: /opt/venv/bin/python
+      # Sign download tokens. Generate with: openssl rand -hex 32
+      - key: MEDIA_TOKEN_SECRET
+        generateValue: true
+      # Set this to the site origin once the frontend is hosted separately.
+      - key: FRONTEND_URL
+        sync: false
+      # Rate limits
+      - key: RATE_LIMIT_MAX
+        value: "30"
+      - key: DOWNLOAD_RATE_LIMIT_MAX
+        value: "10"
+      # Optional: the operator's own Instagram session
+      - key: IG_COOKIE_FILE
+        sync: false
+      - key: IG_SESSION_FILE
+        sync: false
+      # Optional: OneAPI subscription for Bilibili / Kuaishou
+      - key: ONEAPI_BASE_URL
+        sync: false
+      - key: ONEAPI_KEY
+        sync: false

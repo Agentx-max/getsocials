@@ -1,105 +1,145 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
 
+/**
+ * Bluesky media service.
+ *
+ * Uses Bluesky's public, documented API (public.api.bsky.app) rather than a
+ * third-party scraper. The API is open for public posts and returns the
+ * original CDN URLs for images and videos, so no signature handling is needed.
+ */
+
+const API = "https://public.api.bsky.app/xrpc";
+const CDN = "https://cdn.bsky.app/img-feed";
+
+/**
+ * Extracts the handle and post id from a Bluesky URL.
+ * @param {string} url
+ * @returns {{handle: string, rkey: string} | null}
+ */
+function parseBlueskyUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+
+  const host = parsed.hostname.replace(/^www\./, "");
+  if (host !== "bsky.app" && host !== "bsky.social") return null;
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  // /profile/<handle>/post/<rkey>
+  if (segments.length >= 4 && segments[2] === "post") {
+    return { handle: segments[1], rkey: segments[3] };
+  }
+  // /<handle>/post/<rkey>
+  if (segments.length >= 3 && segments[1] === "post") {
+    return { handle: segments[0], rkey: segments[2] };
+  }
+
+  return null;
+}
+
+/**
+ * Resolves a handle to its DID.
+ */
+async function resolveHandle(handle) {
+  const { data } = await axios.get(`${API}/com.atproto.identity.resolveHandle`, {
+    params: { handle },
+    timeout: 15000,
+  });
+  return data.did;
+}
+
+/**
+ * Fetches a public post and its media.
+ *
+ * @param {string} postUrl
+ * @returns {Promise<object>} media payload
+ */
 async function fetchBlueskyMedia(postUrl) {
-  const url =
-    "https://bskysaver.com/download?url=" + encodeURIComponent(postUrl);
+  const parsed = parseBlueskyUrl(postUrl);
 
-  const { data: html } = await axios.get(url, {
-    headers: {
-      "user-agent":
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-      referer: "https://bskysaver.com/",
-    },
+  if (!parsed) {
+    throw new Error(
+      "That does not look like a Bluesky post URL. Expected https://bsky.app/profile/<handle>/post/<id>"
+    );
+  }
+
+  let did = parsed.handle;
+  if (!did.startsWith("did:")) {
+    did = await resolveHandle(parsed.handle);
+  }
+
+  const { data } = await axios.get(`${API}/app.bsky.feed.getPosts`, {
+    params: { uris: `at://${did}/app.bsky.feed.post/${parsed.rkey}` },
+    timeout: 15000,
   });
 
-  const $ = cheerio.load(html);
-  const section = $("section.download_result_section");
-
-  /* ───────────── PROFILE ───────────── */
-  const profileBox = section.find(".download__item__profile_pic").first();
-
-  const profile = {
-    name:
-      profileBox
-        .find("div")
-        .first()
-        .contents()
-        .filter((_, el) => el.type === "text")
-        .text()
-        .trim() || null,
-
-    handle: profileBox.find("span").first().text().trim() || null,
-
-    avatar: profileBox.find("img").first().attr("src") || null,
-  };
-
-  /* ───────────── CAPTION ───────────── */
-  const caption =
-    section
-      .find(".download__item__caption__text")
-      .first()
-      .text()
-      .trim() || null;
+  const post = data.posts?.[0];
+  if (!post) {
+    throw new Error("This Bluesky post could not be found. It may have been deleted.");
+  }
 
   const photos = [];
   const videos = [];
 
-  /* ───────────── MEDIA ───────────── */
-  section.find(".download_item").each((_, el) => {
-    const item = $(el);
+  // Images
+  for (const image of post.images || []) {
+    const full = image.fullsize || image.thumbnail;
+    if (!full) continue;
+    photos.push({
+      index: photos.length + 1,
+      thumbnail: image.thumbnail,
+      url: full,
+      alt: image.alt || null,
+      width: image.aspectRatio ? undefined : undefined,
+      variants: [{ resolution: "original", url: full }],
+    });
+  }
 
-    /* IMAGE */
-    if (item.find(".image_wrapper img").length) {
-      const img = item.find(".image_wrapper img").first();
-
-      const url = item
-        .find("a.download__item__info__actions__button")
-        .attr("href");
-
-      if (!url) return;
-
-      photos.push({
-        index: photos.length + 1,
-        thumbnail: img.attr("src"),
-        variants: [
-          {
-            resolution: "best",
-            url,
-          },
-        ],
-      });
-    }
-
-    /* VIDEO */
-    if (item.find(".video_wrapper video").length) {
-      const video = item.find(".video_wrapper video").first();
-
-      const url = video.attr("src");
-      if (!url) return;
-
+  // Video
+  if (post.video) {
+    const playlist = post.video.playlist;
+    if (playlist) {
       videos.push({
         index: videos.length + 1,
-        thumbnail: video.attr("poster") || null,
-        url,
+        thumbnail: post.thumbnail || null,
+        url: playlist,
+        format: "m3u8",
+        quality: "original",
+        mimeType: "application/x-mpegURL",
+      });
+    } else if (post.video.cid) {
+      // Fall back to the video CDN endpoint for a direct mp4.
+      videos.push({
+        index: videos.length + 1,
+        thumbnail: post.thumbnail || null,
+        url: `${CDN}/video/${encodeURIComponent(post.uri)}/source.mp4`,
         format: "mp4",
+        quality: "original",
+        mimeType: "video/mp4",
       });
     }
-  });
+  }
 
   if (!photos.length && !videos.length) {
-    throw new Error("No media found");
+    throw new Error("This Bluesky post does not contain any images or videos.");
   }
 
   return {
+    type: videos.length ? "video" : "photo",
     platform: "bluesky",
-    profile,
-    caption,
-    photoCount: photos.length,
-    videoCount: videos.length,
-    photos,
+    title: post.record?.text?.slice(0, 200) || null,
+    caption: post.record?.text || null,
+    author: post.author?.displayName || post.author?.handle || null,
+    thumbnail: post.thumbnail || post.images?.[0]?.thumbnail || null,
+    images: photos,
     videos,
+    photos,
+    videoCount: videos.length,
+    photoCount: photos.length,
   };
 }
 
-module.exports = {fetchBlueskyMedia};
+module.exports = { fetchBlueskyMedia, parseBlueskyUrl };

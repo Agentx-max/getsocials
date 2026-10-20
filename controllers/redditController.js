@@ -1,4 +1,4 @@
-const redditDownloader = require("../services/redditService");
+const { redditDownloader } = require("../services/redditService");
 
 async function handleRedditDownload(req, res) {
   const { url } = req.query;

@@ -1,0 +1,29 @@
+services:
+  getsocials:
+    build: .
+    image: getsocials:latest
+    container_name: getsocials
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # The frontend is served by the same origin, so no CORS origin is needed.
+      # Add your own site URL here when the frontend is hosted separately.
+      FRONTEND_URL: ${FRONTEND_URL:-}
+      # Set this to the same value on every instance so download tokens
+      # survive restarts. Generate with: openssl rand -hex 32
+      MEDIA_TOKEN_SECRET: ${MEDIA_TOKEN_SECRET:-}
+      # Rate limits
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-30}
+      DOWNLOAD_RATE_LIMIT_MAX: ${DOWNLOAD_RATE_LIMIT_MAX:-10}
+      # The operator's own Instagram session (optional)
+      IG_COOKIE_FILE: ${IG_COOKIE_FILE:-}
+      IG_SESSION_FILE: ${IG_SESSION_FILE:-}
+      # OneAPI subscription for Bilibili / Kuaishou (optional)
+      ONEAPI_BASE_URL: ${ONEAPI_BASE_URL:-}
+      ONEAPI_KEY: ${ONEAPI_KEY:-}
+    volumes:
+      # Optional: mount the operator's cookie / session files read only
+      - ./secrets:/app/secrets:ro

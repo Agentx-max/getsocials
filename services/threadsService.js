@@ -19,7 +19,17 @@ async function threadsDownloader(postUrl) {
     },
   });
 
-  if (data.status !== "ok") throw new Error("Failed");
+  if (data.status !== "ok") {
+    throw new Error(data.msg || "Failed to fetch the Threads post");
+  }
+
+  // The upstream returns `data` as an HTML fragment. When the post has no
+  // media (or was removed) it sends a message instead, so guard the parse.
+  if (typeof data.data !== "string" || !data.data.trim()) {
+    throw new Error(
+      data.msg || "No media was found for this Threads post. It may be private or have been removed."
+    );
+  }
 
   const $ = cheerio.load(data.data);
 
