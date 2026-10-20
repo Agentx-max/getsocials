@@ -60,19 +60,45 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+const corsBase = {
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
+  maxAge: 600,
+};
+
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow same-origin / non-browser clients (no Origin header)
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
-    maxAge: 600,
+  cors((req, callback) => {
+    const origin = req.headers.origin;
+    const host = req.headers.host;
+
+    // No Origin header: a plain navigation, curl call or server-to-server
+    // request. No CORS headers are needed.
+    if (!origin) {
+      callback(null, { ...corsBase, origin: false });
+      return;
+    }
+
+    let originHost = null;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      originHost = null;
+    }
+
+    // Same-origin requests are always allowed. This matters because Vite
+    // marks its script and stylesheet tags with `crossorigin`, which makes the
+    // browser send an Origin header even for same-origin assets. Without this
+    // the assets would be blocked and the page would render blank.
+    const isSameOrigin = Boolean(originHost && host && originHost === host);
+    const isAllowed = allowedOrigins.includes(origin);
+
+    if (isSameOrigin || isAllowed) {
+      callback(null, { ...corsBase, origin });
+      return;
+    }
+
+    callback(new Error("Not allowed by CORS"));
   })
 );
 
@@ -758,6 +784,14 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  if (err && err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      success: false,
+      error: "This origin is not allowed to use the API.",
+      requestId: req.requestId,
+    });
+  }
+
   console.error(`[${req.requestId}] Unhandled error:`, err.message);
   res.status(500).json({
     success: false,

@@ -140,6 +140,58 @@ YouTube, Bluesky and Reddit worked fine from the same IP.
 
 ---
 
+## ⚠️ `MEDIA_TOKEN_SECRET` — what it is and where to get one
+
+It is **not** a service you sign up for. It is a random password **you** invent,
+used by your own server to sign download links.
+
+### What it does
+
+When the API finds a media URL it hands the browser an opaque *token* instead of
+the raw URL. The token is an HMAC signature over the URL plus an expiry, signed
+with your secret.
+
+That is what stops `/api/stream` from becoming a public open proxy. Without it,
+anyone could ask your server to fetch any URL on the internet through your
+bandwidth. With it, only URLs that **your own extraction service produced** can
+be streamed.
+
+### How to make one
+
+Any long random string works. Pick one of these:
+
+```bash
+# macOS / Linux
+openssl rand -hex 32
+
+# Windows PowerShell
+-join ((1..64) | ForEach-Object { '{0:x}' -f (Get-Random -Maximum 16) })
+
+# Python (works everywhere)
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Paste the output into Render under **Environment**:
+
+| Key | Value |
+|---|---|
+| `MEDIA_TOKEN_SECRET` | the 64 character string you just generated |
+
+### Things to know
+
+- **Keep it the same across restarts and redeploys.** If it changes, any
+  download link the browser is still holding stops working with
+  *"This download link is invalid or has expired."*
+- **Never commit it.** It is in `.gitignore`; only `.env.example` is tracked.
+- **Never paste it in chat or a screenshot.** Anyone with it could forge
+  download tokens for your server.
+- If you leave it unset the server generates a random one at boot. That works
+  fine — it just means every restart invalidates in-flight download links.
+- It is unrelated to your GitHub, Render, or any platform account. It never
+  leaves your server.
+
+---
+
 ## Deploy checklist
 
 ```bash
