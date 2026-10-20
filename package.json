@@ -1,15 +1,15 @@
 {
-  "name": "universaldownloader",
-  "version": "1.8.1",
-  "description": "universalDownloader is an open-source API service that allows users to download media content from various platforms including YouTube, Spotify, Instagram, Facebook, Twitter, and more.",
+  "name": "getsocials",
+  "version": "1.9.0",
+  "description": "GETSocials — a media download API and web app that extracts video, audio and images from 15+ social platforms.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "node test-integration.js"
   },
   "dependencies": {
-    "@tobyg74/tiktok-api-dl": "^1.3.7",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
