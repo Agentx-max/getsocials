@@ -8,7 +8,9 @@ FROM node:20-bookworm-slim AS frontend
 WORKDIR /build
 
 COPY frontend/package*.json ./
-RUN npm ci --no-audit --no-fund
+# `npm ci` needs the lockfile; fall back to `npm install` if it is missing.
+RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; \
+    else npm install --no-audit --no-fund; fi
 
 COPY frontend/ ./
 RUN npm run build
@@ -40,7 +42,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev --no-audit --no-fund
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev --no-audit --no-fund; \
+    else npm install --omit=dev --no-audit --no-fund; fi
 
 COPY index.js ./
 COPY config/ ./config/

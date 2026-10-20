@@ -1,7 +1,6 @@
 # Dependencies
+# Lockfiles ARE committed so `npm ci` works in CI and in the Docker build.
 node_modules/
-package-lock.json
-frontend/package-lock.json
 
 # Build output
 frontend/dist/
